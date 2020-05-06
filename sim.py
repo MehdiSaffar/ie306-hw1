@@ -48,17 +48,3 @@ def arrival(env: sp.Environment):
 
 env.process(arrival(env))
 env.run(until=24*60)
-
-
-
-# class Arrival(sp.Process):
-#     def generate(self):
-#         w
-
-
-# env.process(arrivals(env))
-# env.run(until=24 * 60)
-
-
-# The inter-arrival times of calls are exponentially distributed with mean 6 min.
-
