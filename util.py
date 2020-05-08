@@ -1,3 +1,5 @@
+from functools import partial, wraps
+
 def patch_resource(resource, pre=None, post=None):
     """Patch *resource* so that it calls the callable *pre* before each
     put/get/request/release operation and the callable *post* after each
