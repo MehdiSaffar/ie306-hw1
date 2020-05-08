@@ -93,6 +93,11 @@ class World:
 
         system_time = self.waiting_time + self.avrs_time + op1.service_time + op2.service_time
         correctly_routed_people = self.incoming_calls - self.wrongly_routed_people
+        avg_number_of_customers_1 = op1.avg_number_of_customers()
+        avg_number_of_customers_2 = op2.avg_number_of_customers()
+        print(avg_number_of_customers_1)
+        print(avg_number_of_customers_2)
+
 
         return dict(
             seed=self.seed,
@@ -107,6 +112,8 @@ class World:
             avg_waiting_time=self.waiting_time/correctly_routed_people,
             waiting_to_system_ratio=self.waiting_time/system_time,
             reneg_ratio=self.renegs/self.incoming_calls,
+            avg_number_of_customers_op_1=avg_number_of_customers_1,
+            avg_number_of_customers_op_2=avg_number_of_customers_2
         )
 
         # print()
@@ -125,9 +132,15 @@ class World:
 class Operator(simpy.PriorityResource):
     def __init__(self, env, name,  get_service_time):
         super().__init__(env, capacity=1)
+        self.env = env
         self.get_service_time = get_service_time
         self.service_time = 0
         self.name = name
+        self.queue_duration_count = 0 # Total duration of people waiting in operator queue
+
+    def avg_number_of_customers(self):
+        # return self.queue_duration_count / self.get_service_time() # Avg number of people in operator queue
+        return self.queue_duration_count / self.env.now # Avg number of people in operator queue
 
 
 class Customer():
@@ -164,12 +177,14 @@ class Customer():
             return
 
         before_wait = self.env.now
+
         with self.chosen_operator.request(priority=self.priority) as req:
             self.print(f'is waiting for operator {self.chosen_operator.name} at {before_wait}')
 
             results = yield req | self.env.timeout(10)
             queue_duration = self.env.now - before_wait
             self.world.waiting_time += queue_duration
+            self.chosen_operator.queue_duration_count += queue_duration
 
             if req not in results:  # reneg
                 self.print("Reneging")
